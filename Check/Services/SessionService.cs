@@ -1,37 +1,52 @@
 ﻿using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Options;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using Microsoft.Extensions.Options;
+using System.Security.Cryptography;
 using Check.Interfaces;
 using Check.Options;
 using Check.Models;
+using Check.Database;
+using System.Text;
+using AutoMapper;
+using Check.Database.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace Check.Services;
 
 public class SessionService : ISessionService
 {
     private readonly JwtOptions _jwtOptions;
+    private readonly AppDbContext _appDbContext;
+    private readonly Mapper _mapper;
 
-    public SessionService(IOptions<JwtOptions> jwtOptions)
+    public SessionService(IOptions<JwtOptions> jwtOptions, AppDbContext appDbContext)
     {
         _jwtOptions = jwtOptions.Value;
+        _appDbContext = appDbContext;   
+
+        //var config = new MapperConfiguration(cfg => cfg.CreateMap())
     }
 
     public async Task<TokenVm> SignInAsync(SignInModel model)
     {
-        var sid = "TODO";
-        var email = "TODO";
-        var id = "TODO";
+        var passwordHash = GetPasswordHash(model.Password);
+        User? user = await _appDbContext.Users.FirstOrDefaultAsync(u => 
+            u.Username == model.Username 
+            && u.Password == passwordHash
+        );
+
+        if (user is null) 
+            throw new Exception("Incorrect username or password");
+
 
         var accessClaims = new List<Claim> { 
             new Claim(JwtRegisteredClaimNames.UniqueName, model.Username),
-            new Claim(JwtRegisteredClaimNames.Sid, sid),
-            new Claim(JwtRegisteredClaimNames.Email, email),
-            new Claim(JwtRegisteredClaimNames.NameId, id)
+            new Claim(JwtRegisteredClaimNames.Email, user.Email),
+            new Claim(JwtRegisteredClaimNames.NameId, user.Id.ToString())
         };
         var refreshClaims = new List<Claim> {
-            new Claim(JwtRegisteredClaimNames.Sid, sid),
-            new Claim(JwtRegisteredClaimNames.NameId, id)
+            new Claim(JwtRegisteredClaimNames.NameId, user.Id.ToString())
         };
         
         var tokens = new TokenVm
@@ -51,5 +66,18 @@ public class SessionService : ISessionService
             signingCredentials: new SigningCredentials(_jwtOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
         var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
         return encodedJwt;
+    }
+
+    public string GetPasswordHash(string password)
+    {
+        byte[] hash;
+        using (HashAlgorithm algorithm = SHA256.Create())
+            hash = algorithm.ComputeHash(Encoding.UTF8.GetBytes(password));
+
+        StringBuilder sb = new StringBuilder();
+        foreach (byte b in hash)
+            sb.Append(b.ToString("X2"));
+
+        return sb.ToString();
     }
 }

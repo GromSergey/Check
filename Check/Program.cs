@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -10,18 +11,20 @@ using Check.Interfaces;
 using Check.Services;
 using Check.Options;
 using Check.Database;
-
+using Check.Database.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 
+#region Api and swagger configure
+
+// Add services to the container.
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "DigitalSkynet.AuthApi.Api", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Check.Api", Version = "v1" });
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = @"JWT Authorization header using the Bearer scheme. \r\n\r\n
@@ -55,10 +58,14 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+#endregion
+
 #region Options configure
+
 builder.Configuration.AddJsonFile("appsettings.json");
 var jwtSection = builder.Configuration.GetSection("AuthJWT");
 builder.Services.Configure<JwtOptions>(jwtSection);
+
 #endregion
 
 builder.Services.AddAuthorization();
@@ -80,16 +87,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 #region Services register
+
 builder.Services.AddScoped<ISessionService, SessionService>();
+builder.Services.AddScoped<IUserService, UserService>();
+
 #endregion
 
 #region Configure DB Context
+
 builder.Services
     .AddDbContext<AppDbContext>(options =>
     {
         options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"), o => o.UseNetTopologySuite());
         options.EnableSensitiveDataLogging();
     });
+
 #endregion
 
 var app = builder.Build();

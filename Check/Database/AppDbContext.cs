@@ -7,6 +7,8 @@ namespace Check.Database;
 public class AppDbContext : DbContext
 {
     public DbSet<User> Users { get; set; } = null!;
+    public DbSet<Gift> Gifts { get; set; } = null!;
+    public DbSet<Transaction> Transactions { get; set; } = null!;
 
     public AppDbContext(DbContextOptions<AppDbContext> options)
         : base(options)
