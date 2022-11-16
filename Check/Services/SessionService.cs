@@ -18,14 +18,11 @@ public class SessionService : ISessionService
 {
     private readonly JwtOptions _jwtOptions;
     private readonly AppDbContext _appDbContext;
-    private readonly Mapper _mapper;
 
     public SessionService(IOptions<JwtOptions> jwtOptions, AppDbContext appDbContext)
     {
         _jwtOptions = jwtOptions.Value;
         _appDbContext = appDbContext;   
-
-        //var config = new MapperConfiguration(cfg => cfg.CreateMap())
     }
 
     public async Task<TokenVm> SignInAsync(SignInModel model)

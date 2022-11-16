@@ -90,6 +90,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddScoped<ISessionService, SessionService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IGiftService, GiftService>();
+builder.Services.AddScoped<ITransactionService, TransactionService>();
 
 #endregion
 
