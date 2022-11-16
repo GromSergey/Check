@@ -37,8 +37,18 @@ public class UserService : IUserService
         return result;
     }
 
-    public async Task<UserVm> Get(Guid id)
+    public async Task<UserVm> Get(string username)
     { 
+        var user = await _appDbContext.Users.FirstOrDefaultAsync(x => x.Username == username && !x.IsDeleted);
+        if (user == null)
+            throw new Exception("User not found");
+
+        var userVm = _mapper.Map<User, UserVm>(user);
+        return userVm;
+    }
+
+    public async Task<UserVm> Get(Guid id)
+    {
         var user = await _appDbContext.Users.FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
         if (user == null)
             throw new Exception("User not found");

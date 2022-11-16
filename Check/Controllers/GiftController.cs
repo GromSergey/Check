@@ -28,10 +28,10 @@ public class GiftController : Controller
         return newGift;
     }
 
-    [HttpGet()]
-    public async Task<ActionResult<List<GiftVm>>> GetAll()
+    [HttpGet("{userId}")]
+    public async Task<ActionResult<List<GiftVm>>> GetAll(Guid userId)
     {
-        var gifts = await _gitftService.GetAll();
+        var gifts = await _gitftService.GetAll(userId);
         return gifts;
     }
 
@@ -42,7 +42,7 @@ public class GiftController : Controller
         return gift;
     }
 
-    [HttpPut("{id:guid}")]
+    [HttpPatch("{id:guid}")]
     public async Task<ActionResult<GiftVm>> Update(Guid id, [FromBody] GiftModel model)
     {
         var newGift = await _gitftService.Update(id, model);
@@ -53,6 +53,13 @@ public class GiftController : Controller
     public async Task<ActionResult<bool>> Delete(Guid id)
     {
         var result = await _gitftService.SoftDelete(id);
+        return result;
+    }
+
+    [HttpDelete("{userId:guid}")]
+    public async Task<ActionResult<bool>> DeleteBulk(Guid userId, bool isGifted)
+    {
+        var result = await _gitftService.SoftDeleteBulk(userId, isGifted);
         return result;
     }
 }

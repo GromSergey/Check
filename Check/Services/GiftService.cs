@@ -36,7 +36,7 @@ public class GiftService : IGiftService
 
     public async Task<GiftVm> Get(Guid id)
     {
-        var gift = await _appDbContext.Gifts.FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
+        var gift = await _appDbContext.Gifts.FirstOrDefaultAsync(g => g.Id == id && !g.IsDeleted);
         if (gift == null)
             throw new Exception("Gift not found");
 
@@ -44,10 +44,10 @@ public class GiftService : IGiftService
         return giftVm;
     }
 
-    public async Task<List<GiftVm>> GetAll()
+    public async Task<List<GiftVm>> GetAll(Guid userId)
     {
         var gifts = await _appDbContext.Gifts.ToListAsync();
-        var nonDeletedGifts = gifts.Where(x => !x.IsDeleted).ToList();
+        var nonDeletedGifts = gifts.Where(g => g.UserId == userId && !g.IsDeleted).ToList();
 
         var giftVms = _mapper.Map<List<Gift>, List<GiftVm>>(nonDeletedGifts);
         return giftVms;
@@ -55,7 +55,7 @@ public class GiftService : IGiftService
 
     public async Task<GiftVm> Update(Guid id, GiftModel model)
     {
-        var gift = await _appDbContext.Gifts.FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
+        var gift = await _appDbContext.Gifts.FirstOrDefaultAsync(g => g.Id == id && !g.IsDeleted);
         if (gift == null)
             throw new Exception("Gift not found");
 
@@ -75,11 +75,24 @@ public class GiftService : IGiftService
 
     public async Task<bool> SoftDelete(Guid id)
     {
-        var gift = await _appDbContext.Gifts.FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
+        var gift = await _appDbContext.Gifts.FirstOrDefaultAsync(g => g.Id == id && !g.IsDeleted);
         if (gift == null)
             throw new Exception("Gift not found");
 
         gift.IsDeleted = true;
+        await _appDbContext.SaveChangesAsync();
+
+        return true;
+    }
+
+    public async Task<bool> SoftDeleteBulk(Guid userId, bool isGifted)
+    {
+        var gifts = await _appDbContext.Gifts.ToListAsync();
+        var nonDeletedGifts = gifts.Where(g => g.UserId == userId && g.IsGifted == isGifted && !g.IsDeleted).ToList();
+
+        foreach (var gift in gifts)
+            gift.IsDeleted = true;
+        
         await _appDbContext.SaveChangesAsync();
 
         return true;

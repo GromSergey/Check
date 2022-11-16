@@ -40,7 +40,14 @@ public class UserController : ControllerBase
         return user;
     }
 
-    [HttpPut("{id:guid}")]
+    [HttpGet("{username}")]
+    public async Task<ActionResult<UserVm>> Get(string username)
+    {
+        var user = await _userService.Get(username);
+        return user;
+    }
+
+    [HttpPatch("{id:guid}")]
     public async Task<ActionResult<UserVm>> Update(Guid id, [FromBody] UserModel model)
     {
         var newUser = await _userService.Update(id, model);

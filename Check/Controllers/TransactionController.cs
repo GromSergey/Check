@@ -35,6 +35,13 @@ public class TransactionController : Controller
         return transactions;
     }
 
+    [HttpGet("{userId:guid}")]
+    public async Task<ActionResult<List<TransactionVm>>> GetAll(Guid userId)
+    {
+        var transactions = await _transactionService.GetAll(userId);
+        return transactions;
+    }
+
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<TransactionVm>> Get(Guid id)
     {
@@ -53,6 +60,13 @@ public class TransactionController : Controller
     public async Task<ActionResult<bool>> Delete(Guid id)
     {
         var result = await _transactionService.SoftDelete(id);
+        return result;
+    }
+
+    [HttpPatch("{id:guid}")]
+    public async Task<ActionResult<bool>> Complete(Guid id)
+    {
+        var result = await _transactionService.Complete(id);
         return result;
     }
 }

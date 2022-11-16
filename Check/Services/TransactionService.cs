@@ -36,7 +36,7 @@ public class TransactionService : ITransactionService
 
     public async Task<TransactionVm> Get(Guid id)
     {
-        var transaction = await _appDbContext.Transactions.FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
+        var transaction = await _appDbContext.Transactions.FirstOrDefaultAsync(t => t.Id == id && !t.IsDeleted);
         if (transaction == null)
             throw new Exception("Transaction not found");
 
@@ -47,7 +47,16 @@ public class TransactionService : ITransactionService
     public async Task<List<TransactionVm>> GetAll()
     {
         var transactions = await _appDbContext.Transactions.ToListAsync();
-        var nonDeletedTransactions = transactions.Where(x => !x.IsDeleted).ToList();
+        var nonDeletedTransactions = transactions.Where(t => !t.IsDeleted).ToList();
+
+        var transactionVms = _mapper.Map<List<Transaction>, List<TransactionVm>>(nonDeletedTransactions);
+        return transactionVms;
+    }
+
+    public async Task<List<TransactionVm>> GetAll(Guid userId)
+    {
+        var transactions = await _appDbContext.Transactions.ToListAsync();
+        var nonDeletedTransactions = transactions.Where(t => t.UserId == userId && !t.IsDeleted).ToList();
 
         var transactionVms = _mapper.Map<List<Transaction>, List<TransactionVm>>(nonDeletedTransactions);
         return transactionVms;
@@ -76,6 +85,18 @@ public class TransactionService : ITransactionService
             throw new Exception("Transaction not found");
 
         transaction.IsDeleted = true;
+        await _appDbContext.SaveChangesAsync();
+
+        return true;
+    }
+
+    public async Task<bool> Complete(Guid id)
+    {
+        var transaction = await _appDbContext.Transactions.FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
+        if (transaction == null)
+            throw new Exception("Transaction not found");
+
+        transaction.IsCompleted = true;
         await _appDbContext.SaveChangesAsync();
 
         return true;
