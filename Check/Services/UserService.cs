@@ -74,7 +74,7 @@ public class UserService : IUserService
 
         user.Username = model.Username;
         user.Fullname = model.Fullname;
-        user.Password = model.Password;
+        user.Password = _sessionService.GetPasswordHash(model.Password);
         user.Email = model.Email;
         user.About = model.About;
         user.ImageUrl = model.ImageUrl;

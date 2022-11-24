@@ -36,11 +36,11 @@ public class SessionService : ISessionService
         if (user is null) 
             throw new Exception("Incorrect username or password");
 
-
         var accessClaims = new List<Claim> { 
             new Claim(JwtRegisteredClaimNames.UniqueName, model.Username),
             new Claim(JwtRegisteredClaimNames.Email, user.Email),
-            new Claim(JwtRegisteredClaimNames.NameId, user.Id.ToString())
+            new Claim("guid", user.Id.ToString()),
+            new Claim(ClaimsIdentity.DefaultRoleClaimType, user.Role)
         };
         var refreshClaims = new List<Claim> {
             new Claim(JwtRegisteredClaimNames.NameId, user.Id.ToString())

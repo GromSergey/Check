@@ -13,25 +13,15 @@ namespace Check.Controllers;
 public class SessionController : ControllerBase
 {
     readonly ISessionService _sessionService;
-    readonly AppDbContext _appDbContext;
     public SessionController(ISessionService sessionService, AppDbContext context)
     {
         _sessionService = sessionService;
-        _appDbContext = context;
     }
 
     [HttpPost("LogIn")]
     public async Task<ActionResult<TokenVm>> SignInAsync([FromBody] SignInModel model)
     {
         return await _sessionService.SignInAsync(model);
-    }
-
-    [Authorize]
-    [HttpGet("Hello")]
-    public async Task<ActionResult<List<User>>> hello()
-    {
-        var users = await _appDbContext.Users.ToListAsync();
-        return users;
     }
 }
 

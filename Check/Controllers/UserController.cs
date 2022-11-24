@@ -5,6 +5,8 @@ using Check.Interfaces;
 using Check.Models;
 using Check.Database;
 using Check.Database.Entities;
+using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace Check.Controllers;
 
@@ -27,6 +29,7 @@ public class UserController : ControllerBase
     }
 
     [HttpGet()]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<List<UserVm>>> GetAll()
     {
         var users = await _userService.GetAll();
@@ -34,6 +37,7 @@ public class UserController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
+    [Authorize]
     public async Task<ActionResult<UserVm>> Get(Guid id)
     {
         var user = await _userService.Get(id);
@@ -41,22 +45,29 @@ public class UserController : ControllerBase
     }
 
     [HttpGet("{username}")]
+    [Authorize]
     public async Task<ActionResult<UserVm>> Get(string username)
     {
         var user = await _userService.Get(username);
         return user;
     }
 
-    [HttpPatch("{id:guid}")]
+    [HttpPut("{id:guid}")]
+    [Authorize]
     public async Task<ActionResult<UserVm>> Update(Guid id, [FromBody] UserModel model)
     {
+        if (User.IsInRole("User") && User.FindFirstValue("guid") != id.ToString())
+            throw new Exception("Security access denied");
         var newUser = await _userService.Update(id, model);
         return newUser;
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize]
     public async Task<ActionResult<bool>> Delete(Guid id)
     {
+        if (User.IsInRole("User") && User.FindFirstValue("guid") != id.ToString())
+            throw new Exception("Security access denied");
         var result = await _userService.SoftDelete(id);
         return result;
     }
